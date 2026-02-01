@@ -1,0 +1,16 @@
+# LPU Wireless Auto-Login - Required Dependencies
+# ================================================
+
+# Playwright - Browser automation library
+# Provides async API for controlling Chromium, Firefox, and WebKit browsers
+playwright>=1.40.0
+
+# Keyring - Secure credential storage
+# Uses OS-native credential storage (Windows Credential Manager, macOS Keychain, etc.)
+keyring>=24.0.0
+
+# Note: Tkinter comes pre-installed with Python on most systems
+# On some Linux distributions, you may need to install it separately:
+# Ubuntu/Debian: sudo apt-get install python3-tk
+# Fedora: sudo dnf install python3-tkinter
+# Arch: sudo pacman -S tk
