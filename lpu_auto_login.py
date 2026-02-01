@@ -21,28 +21,17 @@ from typing import Optional, Tuple
 import keyring
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
 
-# ============================================================================
-# CONFIGURATION CONSTANTS
-# ============================================================================
 
-# The login URL for LPU's 24online system
 LOGIN_URL = "https://internet.lpu.in/24online/webpages/client.jsp"
 
-# Service name for keyring storage (identifies credentials in OS credential manager)
 KEYRING_SERVICE = "LPU_Wireless_24Online"
 KEYRING_USERNAME_KEY = "username"
 
-# Timeouts for page operations (in milliseconds) - OPTIMIZED FOR SPEED
-PAGE_LOAD_TIMEOUT = 15000   # 15 seconds (reduced from 30)
-ELEMENT_TIMEOUT = 5000      # 5 seconds (reduced from 10)
-LOGIN_SUCCESS_TIMEOUT = 5000   # 5 seconds to wait for login success (reduced from 15)
+PAGE_LOAD_TIMEOUT = 15000   
+ELEMENT_TIMEOUT = 5000      
+LOGIN_SUCCESS_TIMEOUT = 5000   
 
-# Fast selector timeout for quick element detection
-FAST_SELECTOR_TIMEOUT = 1500  # 1.5 seconds for individual selector attempts
-
-# ============================================================================
-# CREDENTIAL MANAGEMENT FUNCTIONS
-# ============================================================================
+FAST_SELECTOR_TIMEOUT = 1500  
 
 def get_stored_credentials() -> Optional[Tuple[str, str]]:
     """
@@ -59,11 +48,9 @@ def get_stored_credentials() -> Optional[Tuple[str, str]]:
         - Credentials are encrypted and managed by the OS
     """
     try:
-        # Retrieve the username (stored as password for the username key)
         username = keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME_KEY)
         
         if username:
-            # Retrieve the actual password using the username as the key
             password = keyring.get_password(KEYRING_SERVICE, username)
             
             if password:
@@ -90,10 +77,8 @@ def save_credentials(username: str, password: str) -> bool:
         True if saved successfully, False otherwise.
     """
     try:
-        # Store the username so we can retrieve it later
         keyring.set_password(KEYRING_SERVICE, KEYRING_USERNAME_KEY, username)
         
-        # Store the password with username as the identifier
         keyring.set_password(KEYRING_SERVICE, username, password)
         
         print(f"✅ Credentials saved securely for user: {username}")
@@ -112,17 +97,14 @@ def delete_credentials() -> bool:
         True if deleted successfully, False otherwise.
     """
     try:
-        # First, get the username to delete its associated password
         username = keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME_KEY)
         
         if username:
-            # Delete the password entry
             try:
                 keyring.delete_password(KEYRING_SERVICE, username)
             except keyring.errors.PasswordDeleteError:
-                pass  # Password might not exist
+                pass
             
-            # Delete the username entry
             try:
                 keyring.delete_password(KEYRING_SERVICE, KEYRING_USERNAME_KEY)
             except keyring.errors.PasswordDeleteError:
@@ -138,10 +120,6 @@ def delete_credentials() -> bool:
         print(f"❌ Error deleting credentials: {e}")
         return False
 
-
-# ============================================================================
-# TKINTER GUI FOR CREDENTIAL INPUT
-# ============================================================================
 
 class CredentialDialog:
     """
@@ -166,12 +144,10 @@ class CredentialDialog:
         self.cancelled: bool = False
         self.reset_mode = reset_mode
         
-        # Create main window
         self.root = tk.Tk()
         self.root.title("LPU Wireless Login")
         self.root.resizable(False, False)
         
-        # Set window size and center it
         window_width = 400
         window_height = 280
         screen_width = self.root.winfo_screenwidth()
@@ -180,10 +156,8 @@ class CredentialDialog:
         y = (screen_height - window_height) // 2
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
-        # Configure style
         self.root.configure(bg="#1a1a2e")
         
-        # Apply a modern style to ttk widgets
         self.style = ttk.Style()
         self.style.theme_use('clam')
         self.style.configure('TLabel', background='#1a1a2e', foreground='#eee', font=('Segoe UI', 10))
@@ -194,27 +168,22 @@ class CredentialDialog:
         
         self._create_widgets()
         
-        # Handle window close button
         self.root.protocol("WM_DELETE_WINDOW", self._on_cancel)
     
     def _create_widgets(self):
         """Create and layout all GUI widgets."""
         
-        # Main container frame
         main_frame = tk.Frame(self.root, bg="#1a1a2e", padx=30, pady=20)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Title
         title_text = "Reset Credentials" if self.reset_mode else "LPU Wireless Login"
         title_label = ttk.Label(main_frame, text=title_text, style='Title.TLabel')
         title_label.pack(pady=(0, 5))
         
-        # Subtitle
         subtitle = "Enter your new credentials" if self.reset_mode else "Enter your credentials to save"
         subtitle_label = ttk.Label(main_frame, text=subtitle, style='TLabel')
         subtitle_label.pack(pady=(0, 20))
         
-        # Username field
         username_frame = tk.Frame(main_frame, bg="#1a1a2e")
         username_frame.pack(fill=tk.X, pady=(0, 15))
         
@@ -234,7 +203,6 @@ class CredentialDialog:
         )
         self.username_entry.pack(fill=tk.X, pady=(5, 0), ipady=8)
         
-        # Password field
         password_frame = tk.Frame(main_frame, bg="#1a1a2e")
         password_frame.pack(fill=tk.X, pady=(0, 20))
         
@@ -251,15 +219,13 @@ class CredentialDialog:
             highlightthickness=2,
             highlightbackground='#0f3460',
             highlightcolor='#00d9ff',
-            show='•'  # Mask password input
+            show='•'
         )
         self.password_entry.pack(fill=tk.X, pady=(5, 0), ipady=8)
         
-        # Buttons frame
         button_frame = tk.Frame(main_frame, bg="#1a1a2e")
         button_frame.pack(fill=tk.X, pady=(10, 0))
         
-        # Cancel button
         cancel_btn = tk.Button(
             button_frame,
             text="Cancel",
@@ -275,7 +241,6 @@ class CredentialDialog:
         )
         cancel_btn.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Submit button
         submit_btn = tk.Button(
             button_frame,
             text="Save & Login",
@@ -291,10 +256,8 @@ class CredentialDialog:
         )
         submit_btn.pack(side=tk.RIGHT)
         
-        # Bind Enter key to submit
         self.root.bind('<Return>', lambda e: self._on_submit())
         
-        # Focus on username entry
         self.username_entry.focus_set()
     
     def _on_submit(self):
@@ -302,7 +265,6 @@ class CredentialDialog:
         username = self.username_entry.get().strip()
         password = self.password_entry.get()
         
-        # Validate input
         if not username:
             messagebox.showerror("Error", "Please enter your username.")
             self.username_entry.focus_set()
@@ -337,10 +299,6 @@ class CredentialDialog:
         return (self.username, self.password) if self.username and self.password else None
 
 
-# ============================================================================
-# PLAYWRIGHT BROWSER AUTOMATION
-# ============================================================================
-
 async def perform_login(username: str, password: str) -> bool:
     """
     Perform the automated login using Playwright.
@@ -366,41 +324,29 @@ async def perform_login(username: str, password: str) -> bool:
     print("="*60 + "\n")
     
     async with async_playwright() as p:
-        # Launch Chromium browser in non-headless mode (visible)
-        # This allows users to see the automation in action
         print("📌 Launching Chromium browser...")
         browser = await p.chromium.launch(
-            headless=False,  # Browser window will be visible
-            slow_mo=0        # No artificial delay - OPTIMIZED FOR SPEED
+            headless=False,  
+            slow_mo=0        
         )
         
-        # Create a new browser context with a reasonable viewport
         context = await browser.new_context(
             viewport={'width': 1280, 'height': 720},
-            ignore_https_errors=True  # Handle potential certificate issues
+            ignore_https_errors=True
         )
         
-        # Create a new page (tab)
         page = await context.new_page()
         
         try:
-            # ----------------------------------------------------------------
-            # STEP 1: Navigate to the login page
-            # ----------------------------------------------------------------
             print(f"📌 Navigating to: {LOGIN_URL}")
             
             await page.goto(LOGIN_URL, wait_until='domcontentloaded', timeout=PAGE_LOAD_TIMEOUT)
             print("✅ Page loaded successfully!")
             
-            # Minimal wait for dynamic content - OPTIMIZED
             await page.wait_for_timeout(300)
             
-            # ----------------------------------------------------------------
-            # STEP 2: Wait for and fill the username field
-            # ----------------------------------------------------------------
             print("📌 Looking for username field...")
             
-            # Try multiple selectors for username (24online uses various naming conventions)
             username_selectors = [
                 'input[name="username"]',
                 'input#username',
@@ -414,7 +360,7 @@ async def perform_login(username: str, password: str) -> bool:
                 try:
                     username_field = await page.wait_for_selector(
                         selector, 
-                        timeout=FAST_SELECTOR_TIMEOUT,  # OPTIMIZED: reduced timeout
+                        timeout=FAST_SELECTOR_TIMEOUT,  
                         state='visible'
                     )
                     if username_field:
@@ -426,14 +372,10 @@ async def perform_login(username: str, password: str) -> bool:
             if not username_field:
                 raise Exception("Could not find username input field!")
             
-            # Clear any existing content and enter username
             await username_field.fill('')
             await username_field.fill(username)
             print(f"✅ Entered username: {username}")
             
-            # ----------------------------------------------------------------
-            # STEP 3: Wait for and fill the password field
-            # ----------------------------------------------------------------
             print("📌 Looking for password field...")
             
             password_selectors = [
@@ -448,7 +390,7 @@ async def perform_login(username: str, password: str) -> bool:
                 try:
                     password_field = await page.wait_for_selector(
                         selector,
-                        timeout=FAST_SELECTOR_TIMEOUT,  # OPTIMIZED: reduced timeout
+                        timeout=FAST_SELECTOR_TIMEOUT, 
                         state='visible'
                     )
                     if password_field:
@@ -460,13 +402,9 @@ async def perform_login(username: str, password: str) -> bool:
             if not password_field:
                 raise Exception("Could not find password input field!")
             
-            # Enter password (note: we don't log the actual password)
             await password_field.fill(password)
             print("✅ Entered password: ********")
             
-            # ----------------------------------------------------------------
-            # STEP 4: Accept Terms & Conditions checkbox
-            # ----------------------------------------------------------------
             print("📌 Looking for Terms & Conditions checkbox...")
             
             terms_selectors = [
@@ -482,7 +420,7 @@ async def perform_login(username: str, password: str) -> bool:
                 try:
                     terms_checkbox = await page.wait_for_selector(
                         selector,
-                        timeout=FAST_SELECTOR_TIMEOUT,  # OPTIMIZED: reduced timeout
+                        timeout=FAST_SELECTOR_TIMEOUT,  
                         state='visible'
                     )
                     if terms_checkbox:
@@ -492,7 +430,6 @@ async def perform_login(username: str, password: str) -> bool:
                     continue
             
             if terms_checkbox:
-                # Check if already checked
                 is_checked = await terms_checkbox.is_checked()
                 if not is_checked:
                     await terms_checkbox.check()
@@ -502,9 +439,6 @@ async def perform_login(username: str, password: str) -> bool:
             else:
                 print("⚠️ Terms checkbox not found (might not be required)")
             
-            # ----------------------------------------------------------------
-            # STEP 5: Click the Login/Submit button
-            # ----------------------------------------------------------------
             print("📌 Looking for login button...")
             
             login_selectors = [
@@ -524,7 +458,7 @@ async def perform_login(username: str, password: str) -> bool:
                 try:
                     login_button = await page.wait_for_selector(
                         selector,
-                        timeout=FAST_SELECTOR_TIMEOUT,  # OPTIMIZED: reduced timeout
+                        timeout=FAST_SELECTOR_TIMEOUT,  
                         state='visible'
                     )
                     if login_button:
@@ -536,19 +470,13 @@ async def perform_login(username: str, password: str) -> bool:
             if not login_button:
                 raise Exception("Could not find login/submit button!")
             
-            # Click the login button
             await login_button.click()
             print("✅ Clicked login button!")
             
-            # ----------------------------------------------------------------
-            # STEP 6: Wait for login success
-            # ----------------------------------------------------------------
             print("📌 Waiting for login to complete...")
             
-            # Wait for page navigation or success indicator - OPTIMIZED
             await page.wait_for_timeout(1000)
             
-            # Check for common success indicators
             success_indicators = [
                 'text=Logout',
                 'text=logout',
@@ -570,13 +498,11 @@ async def perform_login(username: str, password: str) -> bool:
                     continue
             
             if not login_success:
-                # Check if we're still on the login page (login failed)
                 current_url = page.url
                 if 'client.jsp' not in current_url.lower():
                     print("✅ Login appears successful (page navigation detected)")
                     login_success = True
                 else:
-                    # Check for error messages
                     error_selectors = ['text=Invalid', 'text=incorrect', 'text=failed', '.error']
                     for error_sel in error_selectors:
                         try:
@@ -598,20 +524,18 @@ async def perform_login(username: str, password: str) -> bool:
                 print("   - To check usage, visit: https://172.20.0.66/myaccount.html")
                 print("")
                 
-                # Keep browser open for user to interact
                 print("⏳ Browser will remain open. Close it manually when done.")
                 
-                # Wait until user closes the browser
                 try:
-                    await page.wait_for_timeout(86400000)  # Wait for 24 hours (effectively forever)
+                    await page.wait_for_timeout(86400000) 
                 except:
-                    pass  # Browser was closed by user
+                    pass  
                 
                 return True
             else:
                 print("\n❌ Could not confirm login success.")
                 print("   Please check the browser window for any error messages.")
-                await page.wait_for_timeout(5000)  # OPTIMIZED: reduced from 10 seconds
+                await page.wait_for_timeout(5000)  
                 return False
                 
         except PlaywrightTimeout as e:
@@ -624,15 +548,10 @@ async def perform_login(username: str, password: str) -> bool:
             return False
             
         finally:
-            # Clean up
             await context.close()
             await browser.close()
             print("\n📌 Browser closed.")
 
-
-# ============================================================================
-# MAIN PROGRAM ENTRY POINT
-# ============================================================================
 
 async def main():
     """
@@ -649,7 +568,6 @@ async def main():
     print("🔐 LPU WIRELESS AUTO-LOGIN")
     print("="*60 + "\n")
     
-    # Check command line arguments for reset mode
     reset_mode = '--reset' in sys.argv or '-r' in sys.argv
     
     if reset_mode:
@@ -657,11 +575,9 @@ async def main():
         delete_credentials()
         print("")
     
-    # Try to get stored credentials
     credentials = get_stored_credentials()
     
     if credentials is None:
-        # No credentials found, show GUI
         print("📝 Opening credential input dialog...")
         dialog = CredentialDialog(reset_mode=reset_mode)
         result = dialog.show()
@@ -672,14 +588,12 @@ async def main():
         
         username, password = result
         
-        # Save credentials for future use
         print("\n📝 Saving credentials...")
         if not save_credentials(username, password):
             print("⚠️ Warning: Could not save credentials. You'll need to enter them again next time.")
         
         credentials = (username, password)
     
-    # Perform the login
     username, password = credentials
     success = await perform_login(username, password)
     
