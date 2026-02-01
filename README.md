@@ -6,6 +6,20 @@ A Python automation tool that securely logs you into LPU's 24online wireless net
 ![Playwright](https://img.shields.io/badge/Playwright-Automation-green.svg)
 ![Status](https://img.shields.io/badge/Status-Ready-brightgreen.svg)
 
+## 📖 About The Project
+
+Logging into LPU's 24online wireless network can be tedious — opening the captive portal page, entering credentials, checking the terms box, and clicking submit... **every single time** you connect to WiFi.
+
+**LPU Wireless Auto-Login** eliminates this hassle by automating the entire login process:
+
+- **Problem**: LPU's campus WiFi requires manual login through a web portal (`internet.lpu.in/24online`) every time you connect. This repetitive process is time-consuming, especially for students who switch between buildings or reconnect frequently.
+
+- **Solution**: This Python-based automation tool securely stores your credentials and handles the complete login flow with a single command. It uses Playwright for browser automation and the OS-native credential manager (Windows Credential Manager/macOS Keychain) for secure password storage.
+
+- **Who is this for?**: LPU students and staff who want a faster, one-click solution to authenticate with the campus WiFi network.
+
+> 💡 **First run**: Enter your credentials once via a sleek GUI → **Every subsequent run**: Instant automatic login!
+
 ## ✨ Features
 
 - 🖥️ **Simple GUI** - Clean Tkinter interface for first-time credential setup
@@ -19,20 +33,15 @@ A Python automation tool that securely logs you into LPU's 24online wireless net
 ### Step 1: Install Python Dependencies
 
 ```bash
-# Navigate to the project directory
-cd LPU_Wireless_Login
 
-# Install required packages
 pip install playwright keyring
 
-# Or use requirements.txt
 pip install -r requirements.txt
 ```
 
 ### Step 2: Install Playwright Browsers
 
 ```bash
-# This downloads Chromium and other browsers (required, one-time setup)
 playwright install
 ```
 
