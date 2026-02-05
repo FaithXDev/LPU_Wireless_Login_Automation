@@ -1,10 +1,18 @@
 # LPU Wireless Auto-Login - Required Dependencies
 # ================================================
 
+# Browser automation
 playwright>=1.40.0
 
-
+# Credential storage (legacy mode)
 keyring>=24.0.0
+
+# Encryption for secure credential storage
+cryptography>=41.0.0
+
+# System tray integration (optional, for background mode)
+pystray>=0.19.0
+pillow>=10.0.0
 
 # Note: Tkinter comes pre-installed with Python on most systems
 # On some Linux distributions, you may need to install it separately:
