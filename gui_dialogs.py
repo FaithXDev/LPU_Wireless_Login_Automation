@@ -75,7 +75,6 @@ def calculate_password_strength(password: str) -> Tuple[int, str, str]:
     
     score = 0
     
-    # Length scoring
     length = len(password)
     if length >= 8:
         score += 20
@@ -84,7 +83,6 @@ def calculate_password_strength(password: str) -> Tuple[int, str, str]:
     if length >= 16:
         score += 10
     
-    # Character variety
     if re.search(r'[a-z]', password):
         score += 15
     if re.search(r'[A-Z]', password):
@@ -94,11 +92,9 @@ def calculate_password_strength(password: str) -> Tuple[int, str, str]:
     if re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         score += 20
     
-    # Bonus for mixed characters
     if re.search(r'(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])', password):
         score += 10
     
-    # Penalty for common patterns
     common_patterns = ['123', 'abc', 'password', 'qwerty', '111']
     for pattern in common_patterns:
         if pattern.lower() in password.lower():
@@ -160,10 +156,9 @@ class MasterPasswordDialog:
             "change": "🔑 Change Master Password"
         }
         self.root.title(titles.get(self.mode, "Master Password"))
-        self.root.resizable(True, True)  # Allow window resizing
+        self.root.resizable(True, True) 
         self.root.configure(bg=Theme.BG_PRIMARY)
         
-        # Window size based on mode
         if self.mode == "setup":
             width, height = 450, 420
         elif self.mode == "change":
@@ -171,7 +166,6 @@ class MasterPasswordDialog:
         else:
             width, height = 400, 280
         
-        # Center window
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         x = (screen_width - width) // 2
@@ -185,7 +179,6 @@ class MasterPasswordDialog:
         main_frame = tk.Frame(self.root, bg=Theme.BG_PRIMARY, padx=35, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header
         if self.mode == "setup":
             self._create_setup_ui(main_frame)
         elif self.mode == "change":
@@ -195,7 +188,7 @@ class MasterPasswordDialog:
     
     def _create_unlock_ui(self, parent):
         """Create unlock mode UI."""
-        # Title
+    
         title = tk.Label(
             parent,
             text="🔓 Unlock Credentials",
@@ -205,7 +198,6 @@ class MasterPasswordDialog:
         )
         title.pack(pady=(0, 10))
         
-        # Subtitle
         subtitle = tk.Label(
             parent,
             text="Enter your master password to access saved credentials",
@@ -215,13 +207,11 @@ class MasterPasswordDialog:
         )
         subtitle.pack(pady=(0, 25))
         
-        # Password field
         self._create_password_field(parent, "Master Password:", "password_entry")
         
-        # Buttons
+        
         self._create_buttons(parent, "Unlock")
         
-        # Security info
         self._create_security_note(parent)
         
         self.password_entry.focus_set()
@@ -229,7 +219,6 @@ class MasterPasswordDialog:
     
     def _create_setup_ui(self, parent):
         """Create setup mode UI with password strength."""
-        # Title
         title = tk.Label(
             parent,
             text="🔐 Create Master Password",
@@ -239,7 +228,6 @@ class MasterPasswordDialog:
         )
         title.pack(pady=(0, 5))
         
-        # Subtitle
         subtitle = tk.Label(
             parent,
             text="This password protects all your saved credentials",
@@ -249,16 +237,12 @@ class MasterPasswordDialog:
         )
         subtitle.pack(pady=(0, 20))
         
-        # Password field with strength meter
         self._create_password_field(parent, "Master Password:", "password_entry", show_strength=True)
         
-        # Confirm password
         self._create_password_field(parent, "Confirm Password:", "confirm_entry")
         
-        # Biometric option
         self._create_biometric_option(parent)
         
-        # Buttons
         self._create_buttons(parent, "Create Password")
         
         self.password_entry.focus_set()
@@ -266,7 +250,6 @@ class MasterPasswordDialog:
     
     def _create_change_ui(self, parent):
         """Create change password UI."""
-        # Title
         title = tk.Label(
             parent,
             text="🔑 Change Master Password",
@@ -276,16 +259,12 @@ class MasterPasswordDialog:
         )
         title.pack(pady=(0, 20))
         
-        # Current password
         self._create_password_field(parent, "Current Password:", "current_entry")
         
-        # New password with strength
         self._create_password_field(parent, "New Password:", "password_entry", show_strength=True)
         
-        # Confirm new password
         self._create_password_field(parent, "Confirm New Password:", "confirm_entry")
         
-        # Buttons
         self._create_buttons(parent, "Change Password")
         
         self.current_entry.focus_set()
@@ -341,7 +320,6 @@ class MasterPasswordDialog:
             )
             self.strength_label.pack(anchor=tk.W, pady=(3, 0))
             
-            # Bind strength calculation
             entry.bind('<KeyRelease>', self._update_strength)
     
     def _update_strength(self, event=None):
@@ -349,12 +327,10 @@ class MasterPasswordDialog:
         password = self.password_entry.get()
         score, label, color = calculate_password_strength(password)
         
-        # Update bar
-        bar_width = int((score / 100) * 380)  # Max width
+        bar_width = int((score / 100) * 380) 
         self.strength_bar.configure(bg=color)
         self.strength_bar.place(width=bar_width)
         
-        # Update label
         self.strength_label.configure(
             text=f"Password strength: {label} ({score}%)",
             fg=color
@@ -557,7 +533,7 @@ class ProfileSelectionDialog:
         """
         self.profiles = profiles
         self.selected_profile: Optional[str] = None
-        self.action: Optional[str] = None  # "select", "add", "edit", "delete"
+        self.action: Optional[str] = None  
         self.cancelled: bool = False
         
         if parent:
@@ -571,7 +547,7 @@ class ProfileSelectionDialog:
     def _setup_window(self):
         """Configure the dialog window."""
         self.root.title("👤 Select Profile")
-        self.root.resizable(True, True)  # Allow window resizing
+        self.root.resizable(True, True) 
         self.root.configure(bg=Theme.BG_PRIMARY)
         
         width, height = 450, 450
@@ -607,13 +583,10 @@ class ProfileSelectionDialog:
         )
         subtitle.pack(pady=(0, 20))
         
-        # Profile list
         self._create_profile_list(main_frame)
         
-        # Action buttons
         self._create_action_buttons(main_frame)
         
-        # Main buttons
         self._create_main_buttons(main_frame)
     
     def _create_profile_list(self, parent):
@@ -622,7 +595,6 @@ class ProfileSelectionDialog:
                              highlightbackground=Theme.BORDER_NORMAL)
         list_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
         
-        # Scrollable canvas
         canvas = tk.Canvas(list_frame, bg=Theme.BG_SECONDARY, highlightthickness=0)
         scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=Theme.BG_SECONDARY)
@@ -662,7 +634,6 @@ class ProfileSelectionDialog:
         frame = tk.Frame(parent, bg=Theme.BG_SECONDARY, padx=15, pady=12)
         frame.pack(fill=tk.X)
         
-        # Radio button for selection
         radio = tk.Radiobutton(
             frame,
             variable=self.selected_var,
@@ -673,7 +644,6 @@ class ProfileSelectionDialog:
         )
         radio.pack(side=tk.LEFT)
         
-        # Profile info
         info_frame = tk.Frame(frame, bg=Theme.BG_SECONDARY)
         info_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         
@@ -712,7 +682,6 @@ class ProfileSelectionDialog:
             )
             last_used.pack(fill=tk.X)
         
-        # Separator
         separator = tk.Frame(parent, bg=Theme.BORDER_NORMAL, height=1)
         separator.pack(fill=tk.X)
     
@@ -850,7 +819,7 @@ class ProfileEditorDialog:
         """Configure the dialog window."""
         title = "✏️ Edit Profile" if self.existing else "➕ Add Profile"
         self.root.title(title)
-        self.root.resizable(True, True)  # Allow window resizing
+        self.root.resizable(True, True) 
         self.root.configure(bg=Theme.BG_PRIMARY)
         
         width, height = 420, 350
@@ -878,16 +847,12 @@ class ProfileEditorDialog:
         )
         title.pack(pady=(0, 20))
         
-        # Profile name
         self._create_field(main_frame, "Profile Name:", "name_entry")
         
-        # Username
         self._create_field(main_frame, "Username:", "username_entry")
         
-        # Password
         self._create_field(main_frame, "Password:", "password_entry", is_password=True)
         
-        # Default checkbox
         self.default_var = tk.BooleanVar(value=self.existing.is_default if self.existing else False)
         checkbox = tk.Checkbutton(
             main_frame,
@@ -901,13 +866,10 @@ class ProfileEditorDialog:
         )
         checkbox.pack(anchor=tk.W, pady=(10, 20))
         
-        # Pre-fill if editing
         if self.existing:
             self.name_entry.insert(0, self.existing.name)
             self.username_entry.insert(0, self.existing.username)
-            # Password is not pre-filled for security
         
-        # Buttons
         self._create_buttons(main_frame)
         
         self.name_entry.focus_set()
@@ -1051,7 +1013,7 @@ class SecurityInfoDialog:
     def _setup_window(self):
         """Configure the dialog window."""
         self.root.title("🔒 Security Information")
-        self.root.resizable(True, True)  # Allow window resizing
+        self.root.resizable(True, True)  
         self.root.configure(bg=Theme.BG_PRIMARY)
         
         width, height = 500, 380
@@ -1066,7 +1028,6 @@ class SecurityInfoDialog:
         main_frame = tk.Frame(self.root, bg=Theme.BG_PRIMARY, padx=30, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header
         title = tk.Label(
             main_frame,
             text="🔒 Security Information",
@@ -1076,7 +1037,6 @@ class SecurityInfoDialog:
         )
         title.pack(pady=(0, 20))
         
-        # Info items
         info_frame = tk.Frame(main_frame, bg=Theme.BG_SECONDARY, padx=20, pady=15)
         info_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -1092,7 +1052,6 @@ class SecurityInfoDialog:
         for label, value in items:
             self._create_info_row(info_frame, label, value)
         
-        # Security note
         note_frame = tk.Frame(main_frame, bg=Theme.BG_TERTIARY, padx=15, pady=12)
         note_frame.pack(fill=tk.X, pady=(15, 0))
         
@@ -1108,7 +1067,6 @@ class SecurityInfoDialog:
         )
         note.pack()
         
-        # Close button
         close_btn = tk.Button(
             main_frame,
             text="Close",
@@ -1159,13 +1117,11 @@ class SecurityInfoDialog:
 # ============================================================================
 
 if __name__ == "__main__":
-    # Test master password dialog
     print("Testing Master Password Dialog (Setup Mode)...")
     dialog = MasterPasswordDialog(mode="setup")
     result = dialog.show()
     print(f"Result: {result}")
     
-    # Test profile selection
     print("\nTesting Profile Selection Dialog...")
     test_profiles = [
         ProfileInfo("Default", "user1", True, "2024-01-15T10:30:00"),

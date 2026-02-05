@@ -35,7 +35,6 @@ from typing import Optional, Tuple, List
 import keyring
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
 
-# Import the enhanced secure credential modules
 try:
     from secure_credentials import (
         SecureCredentialManager, 
@@ -56,7 +55,6 @@ except ImportError:
     ENHANCED_SECURITY = False
     print("⚠️ Enhanced security modules not found. Using legacy mode.")
 
-# Import network integration modules
 try:
     from network_integration import (
         NetworkMonitor,
@@ -76,7 +74,6 @@ except ImportError:
     TRAY_AVAILABLE = False
     print("⚠️ Network integration not available.")
 
-# Import the integrated GUI application
 try:
     from gui_app import CredentialManagerApp, show_credential_manager
     GUI_APP_AVAILABLE = True
@@ -91,11 +88,9 @@ except ImportError:
 
 LOGIN_URL = "https://internet.lpu.in/24online/webpages/client.jsp"
 
-# Legacy keyring settings (for backward compatibility)
 KEYRING_SERVICE = "LPU_Wireless_24Online"
 KEYRING_USERNAME_KEY = "username"
 
-# Timeout settings (in milliseconds)
 PAGE_LOAD_TIMEOUT = 15000   
 ELEMENT_TIMEOUT = 5000      
 LOGIN_SUCCESS_TIMEOUT = 5000   
@@ -244,7 +239,6 @@ class EnhancedCredentialManager:
         if success:
             self.unlocked = True
             
-            # Offer to migrate existing keyring credentials
             legacy_creds = get_stored_credentials_legacy()
             if legacy_creds:
                 print("\n📦 Found existing credentials from legacy storage.")
@@ -283,7 +277,6 @@ class EnhancedCredentialManager:
             Tuple of (username, password) or None if not found.
         """
         if not self.is_available() or not self.unlocked:
-            # Fall back to legacy
             return get_stored_credentials_legacy()
         
         return self.manager.get_credentials(profile_name)
@@ -303,7 +296,6 @@ class EnhancedCredentialManager:
             True if added successfully, False otherwise.
         """
         if not self.is_available() or not self.unlocked:
-            # Fall back to legacy
             return save_credentials_legacy(username, password)
         
         return self.manager.add_profile(profile_name, username, password, is_default)
@@ -316,7 +308,6 @@ class EnhancedCredentialManager:
             List of ProfileInfo objects.
         """
         if not self.is_available() or not self.unlocked:
-            # Check legacy storage
             legacy_creds = get_stored_credentials_legacy()
             if legacy_creds:
                 return [ProfileInfo(
@@ -386,7 +377,6 @@ def handle_credential_workflow(reset_mode: bool = False,
     manager = EnhancedCredentialManager()
     
     if not manager.is_available():
-        # Fall back to legacy mode
         print("ℹ️ Using legacy credential storage (OS Keyring)")
         if reset_mode:
             delete_credentials_legacy()
@@ -406,17 +396,14 @@ def handle_credential_workflow(reset_mode: bool = False,
         
         return credentials
     
-    # Enhanced mode with multi-profile support
     print("\n" + "=" * 60)
     print("🔐 SECURE CREDENTIAL MANAGER")
     print("=" * 60)
     print(f"\n📁 Storage: {get_database_path()}")
     
-    # Check if first-time setup is needed
     if not manager.is_initialized():
         print("\n🆕 First-time setup required. Creating secure storage...")
         
-        # Show master password setup dialog
         dialog = MasterPasswordDialog(mode="setup")
         result = dialog.show()
         
@@ -431,7 +418,6 @@ def handle_credential_workflow(reset_mode: bool = False,
             print("❌ Failed to set up secure storage.")
             return None
         
-        # Now add credentials
         print("\n📝 Please add your login credentials...")
         editor = ProfileEditorDialog()
         profile_data = editor.show()
@@ -449,14 +435,11 @@ def handle_credential_workflow(reset_mode: bool = False,
         
         return (profile_data['username'], profile_data['password'])
     
-    # Unlock existing storage
     print("\n🔓 Unlocking secure storage...")
     
-    # Check for biometric
     security_info = manager.get_security_info()
     use_biometric = security_info.get('biometric_enabled', False)
     
-    # Show unlock dialog
     unlock_dialog = MasterPasswordDialog(mode="unlock")
     unlock_result = unlock_dialog.show()
     
@@ -468,11 +451,9 @@ def handle_credential_workflow(reset_mode: bool = False,
         print("❌ Failed to unlock. Incorrect password?")
         return None
     
-    # Get profiles
     profiles = manager.list_profiles()
     
     if reset_mode or not profiles:
-        # Add new profile
         editor = ProfileEditorDialog()
         profile_data = editor.show()
         
@@ -489,17 +470,13 @@ def handle_credential_workflow(reset_mode: bool = False,
             )
             return (profile_data['username'], profile_data['password'])
     
-    # Select profile
     if len(profiles) == 1:
-        # Use the only profile
         creds = manager.get_credentials(profiles[0].name)
         if creds:
             print(f"✅ Using profile: {profiles[0].name}")
             return creds
     
-    # Multiple profiles - show selection dialog
     if profile:
-        # Use specified profile
         creds = manager.get_credentials(profile)
         if creds:
             print(f"✅ Using profile: {profile}")
@@ -507,7 +484,6 @@ def handle_credential_workflow(reset_mode: bool = False,
         else:
             print(f"❌ Profile '{profile}' not found.")
     
-    # Show profile selection
     selection_dialog = ProfileSelectionDialog(profiles)
     selection_result = selection_dialog.show()
     
@@ -554,7 +530,6 @@ def handle_credential_workflow(reset_mode: bool = False,
     elif action == 'delete' and selected_profile:
         if messagebox.askyesno("Confirm Delete", f"Delete profile '{selected_profile}'?"):
             manager.delete_profile(selected_profile)
-            # Recursively show dialog again
             return handle_credential_workflow()
     
     elif action == 'default' and selected_profile:
@@ -595,7 +570,7 @@ class CredentialDialog:
         
         self.root = tk.Tk()
         self.root.title("LPU Wireless Login")
-        self.root.resizable(True, True)  # Allow window resizing
+        self.root.resizable(True, True) 
         
         window_width = 400
         window_height = 280
@@ -795,7 +770,7 @@ async def perform_login(username: str, password: str,
         
         page = await context.new_page()
         
-        login_success = False  # Initialize before try block
+        login_success = False  
         
         try:
             print(f"📌 Navigating to: {LOGIN_URL}")
@@ -949,7 +924,7 @@ async def perform_login(username: str, password: str,
             login_success = False
             for indicator in success_indicators:
                 try:
-                    element = await page.wait_for_selector(indicator, timeout=800)  # OPTIMIZED: reduced from 2000ms
+                    element = await page.wait_for_selector(indicator, timeout=800)  
                     if element:
                         login_success = True
                         print(f"✅ Login successful! Found indicator: {indicator}")
@@ -980,9 +955,8 @@ async def perform_login(username: str, password: str,
                 print("="*60)
                 
                 if auto_close:
-                    # Background mode - close immediately after success
                     print("\n✅ Auto-login complete. Browser closing...")
-                    await page.wait_for_timeout(2000)  # Brief wait
+                    await page.wait_for_timeout(2000)  
                     return True
                 
                 print("\n📝 Important Notes:")
@@ -993,7 +967,6 @@ async def perform_login(username: str, password: str,
                 
                 if minimize:
                     print("📌 Browser window minimized. Session active in background.")
-                    # Note: Playwright doesn't have built-in minimize, but headless achieves similar effect
                 else:
                     print("⏳ Browser will remain open. Close it manually when done.")
                 
@@ -1044,7 +1017,6 @@ async def main():
     - Optional biometric unlock
     """
     
-    # Parse command line arguments
     parser = argparse.ArgumentParser(
         description="LPU Wireless Auto-Login with Secure Credential Management",
         formatter_class=argparse.RawDescriptionHelpFormatter,

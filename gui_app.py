@@ -131,27 +131,21 @@ class CredentialManagerApp:
         self.result: Optional[Dict[str, Any]] = None
         self.cancelled: bool = False
         
-        # Navigation history
         self.page_history: List[str] = []
         self.current_page: str = ""
         
-        # Profile data
         self.profiles: List[ProfileData] = []
         self.editing_profile: Optional[ProfileData] = None
         self.selected_profile: Optional[str] = None
         
-        # Create main window
         self.root = tk.Tk()
         self._setup_window()
         
-        # Container for pages
         self.container = tk.Frame(self.root, bg=Theme.BG_PRIMARY)
         self.container.pack(fill=tk.BOTH, expand=True)
         
-        # Page frames dictionary
         self.pages: Dict[str, tk.Frame] = {}
         
-        # Initialize pages
         self._create_all_pages()
     
     def _setup_window(self):
@@ -160,13 +154,11 @@ class CredentialManagerApp:
         self.root.resizable(True, True)
         self.root.configure(bg=Theme.BG_PRIMARY)
         
-        # Window size
         width, height = 500, 550
         min_width, min_height = 400, 450
         
         self.root.minsize(min_width, min_height)
         
-        # Center window
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         x = (screen_width - width) // 2
@@ -199,19 +191,15 @@ class CredentialManagerApp:
             page_name: Name of the page to show
             add_to_history: Whether to add to navigation history
         """
-        # Hide current page
         if self.current_page and self.current_page in self.pages:
             self.pages[self.current_page].pack_forget()
         
-        # Add to history
         if add_to_history and self.current_page:
             self.page_history.append(self.current_page)
         
-        # Show new page
         self.current_page = page_name
         self.pages[page_name].pack(fill=tk.BOTH, expand=True)
         
-        # Refresh page data if needed
         if page_name == "profiles":
             self._refresh_profiles_list()
         elif page_name == "edit_profile":
@@ -234,11 +222,9 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=40, pady=30)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header
         self._create_header(main_frame, "🔓 Unlock Credentials", 
                            "Enter your master password")
         
-        # Password field
         password_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         password_frame.pack(fill=tk.X, pady=(30, 20))
         
@@ -248,7 +234,6 @@ class CredentialManagerApp:
         self.unlock_password_entry = self._create_entry(password_frame, show='•')
         self.unlock_password_entry.bind('<Return>', lambda e: self._on_unlock())
         
-        # Buttons
         btn_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         btn_frame.pack(fill=tk.X, pady=(20, 0))
         
@@ -257,7 +242,6 @@ class CredentialManagerApp:
         self._create_button(btn_frame, "Unlock", self._on_unlock, 
                            side=tk.RIGHT, style="primary")
         
-        # Security note
         self._create_info_box(main_frame, 
             "🔒 Your password is never stored. Only a secure hash is kept for verification.")
     
@@ -275,7 +259,6 @@ class CredentialManagerApp:
                 messagebox.showerror("Error", "Incorrect password.")
                 self.unlock_password_entry.delete(0, tk.END)
         else:
-            # Demo mode
             self.show_page("profiles")
     
     # ========================================================================
@@ -287,11 +270,9 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=40, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header
         self._create_header(main_frame, "🔐 Create Master Password",
                            "This password protects all your credentials")
         
-        # Password field with strength
         pw_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         pw_frame.pack(fill=tk.X, pady=(25, 0))
         
@@ -301,7 +282,6 @@ class CredentialManagerApp:
         self.setup_password_entry = self._create_entry(pw_frame, show='•')
         self.setup_password_entry.bind('<KeyRelease>', self._update_setup_strength)
         
-        # Strength meter
         strength_frame = tk.Frame(pw_frame, bg=Theme.BG_PRIMARY)
         strength_frame.pack(fill=tk.X, pady=(8, 0))
         
@@ -317,7 +297,6 @@ class CredentialManagerApp:
             font=('Segoe UI', 8), fg=Theme.TEXT_MUTED, bg=Theme.BG_PRIMARY)
         self.setup_strength_label.pack(anchor=tk.W, pady=(3, 0))
         
-        # Confirm password
         confirm_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         confirm_frame.pack(fill=tk.X, pady=(15, 0))
         
@@ -326,7 +305,6 @@ class CredentialManagerApp:
         
         self.setup_confirm_entry = self._create_entry(confirm_frame, show='•')
         
-        # Biometric option
         bio_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         bio_frame.pack(fill=tk.X, pady=(15, 0))
         
@@ -336,7 +314,6 @@ class CredentialManagerApp:
                       fg=Theme.TEXT_SECONDARY, bg=Theme.BG_PRIMARY,
                       selectcolor=Theme.BG_TERTIARY).pack(anchor=tk.W)
         
-        # Buttons
         btn_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         btn_frame.pack(fill=tk.X, pady=(25, 0))
         
@@ -389,7 +366,6 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=30, pady=20)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header with title and add button
         header_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         header_frame.pack(fill=tk.X)
         
@@ -406,12 +382,10 @@ class CredentialManagerApp:
                 font=('Segoe UI', 10), fg=Theme.TEXT_SECONDARY,
                 bg=Theme.BG_PRIMARY).pack(anchor=tk.W, pady=(5, 15))
         
-        # Profile list container
         list_container = tk.Frame(main_frame, bg=Theme.BG_SECONDARY, 
                                  highlightthickness=1, highlightbackground=Theme.BORDER_NORMAL)
         list_container.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
         
-        # Scrollable canvas
         canvas = tk.Canvas(list_container, bg=Theme.BG_SECONDARY, highlightthickness=0)
         scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
         
@@ -428,7 +402,6 @@ class CredentialManagerApp:
         self.profiles_canvas = canvas
         self.profiles_selected_var = tk.StringVar()
         
-        # Action buttons
         action_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         action_frame.pack(fill=tk.X, pady=(0, 15))
         
@@ -445,7 +418,6 @@ class CredentialManagerApp:
                      activebackground=Theme.BORDER_NORMAL, relief=tk.FLAT,
                      cursor='hand2', command=cmd, padx=10).pack(side=tk.LEFT, padx=(0, 8))
         
-        # Main action buttons
         bottom_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         bottom_frame.pack(fill=tk.X)
         
@@ -456,14 +428,11 @@ class CredentialManagerApp:
     
     def _refresh_profiles_list(self):
         """Refresh the profiles list display."""
-        # Clear existing items
         for widget in self.profiles_list_frame.winfo_children():
             widget.destroy()
         
-        # Always reload profiles from manager
         if self.credential_manager:
             try:
-                # Check if manager has list_profiles method
                 if hasattr(self.credential_manager, 'list_profiles'):
                     profiles = self.credential_manager.list_profiles()
                     self.profiles = [ProfileData(
@@ -480,9 +449,7 @@ class CredentialManagerApp:
                     ) for p in profiles]
             except Exception as e:
                 print(f"Error loading profiles: {e}")
-                # Keep existing self.profiles if load fails
         
-        # Debug: print profiles count
         print(f"📋 Loaded {len(self.profiles)} profiles")
         
         if not self.profiles:
@@ -492,18 +459,15 @@ class CredentialManagerApp:
                     bg=Theme.BG_SECONDARY, pady=40).pack()
             return
         
-        # Set first or default profile as selected
         default_profile = next((p for p in self.profiles if p.is_default), None)
         if default_profile:
             self.profiles_selected_var.set(default_profile.name)
         elif self.profiles:
             self.profiles_selected_var.set(self.profiles[0].name)
         
-        # Create profile items
         for profile in self.profiles:
             self._create_profile_item(self.profiles_list_frame, profile)
         
-        # Update canvas scroll region
         self.profiles_list_frame.update_idletasks()
         self.profiles_canvas.configure(scrollregion=self.profiles_canvas.bbox("all"))
     
@@ -512,20 +476,17 @@ class CredentialManagerApp:
         frame = tk.Frame(parent, bg=Theme.BG_SECONDARY, padx=15, pady=12)
         frame.pack(fill=tk.X)
         
-        # Make entire frame clickable
         def select_profile():
             self.profiles_selected_var.set(profile.name)
         
         frame.bind('<Button-1>', lambda e: select_profile())
         
-        # Radio button
         radio = tk.Radiobutton(frame, variable=self.profiles_selected_var,
                               value=profile.name, bg=Theme.BG_SECONDARY,
                               activebackground=Theme.BG_SECONDARY,
                               selectcolor=Theme.ACCENT_PRIMARY)
         radio.pack(side=tk.LEFT)
         
-        # Info section
         info_frame = tk.Frame(frame, bg=Theme.BG_SECONDARY)
         info_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         info_frame.bind('<Button-1>', lambda e: select_profile())
@@ -549,7 +510,6 @@ class CredentialManagerApp:
             last_lbl.pack(fill=tk.X)
             last_lbl.bind('<Button-1>', lambda e: select_profile())
         
-        # Separator
         tk.Frame(parent, bg=Theme.BORDER_NORMAL, height=1).pack(fill=tk.X)
     
     def _on_add_profile(self):
@@ -625,7 +585,6 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=40, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header with back button
         header = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         header.pack(fill=tk.X)
         
@@ -642,10 +601,8 @@ class CredentialManagerApp:
                 font=('Segoe UI', 10), fg=Theme.TEXT_SECONDARY,
                 bg=Theme.BG_PRIMARY).pack(anchor=tk.W, pady=(10, 20))
         
-        # Form fields
         self._create_profile_form(main_frame, "add")
         
-        # Buttons
         btn_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         btn_frame.pack(fill=tk.X, pady=(25, 0))
         
@@ -675,7 +632,6 @@ class CredentialManagerApp:
             except Exception as e:
                 messagebox.showerror("Error", str(e))
         else:
-            # Demo mode
             self.profiles.append(ProfileData(name, username, password, is_default))
             messagebox.showinfo("Success", f"Profile '{name}' created!")
             self._clear_profile_form()
@@ -690,7 +646,6 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=40, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header with back button
         header = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         header.pack(fill=tk.X)
         
@@ -709,10 +664,8 @@ class CredentialManagerApp:
                 font=('Segoe UI', 10), fg=Theme.TEXT_SECONDARY,
                 bg=Theme.BG_PRIMARY).pack(anchor=tk.W, pady=(10, 20))
         
-        # Form fields
         self._create_profile_form(main_frame, "edit")
         
-        # Buttons - Back and Save
         btn_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         btn_frame.pack(fill=tk.X, pady=(25, 0))
         
@@ -738,7 +691,6 @@ class CredentialManagerApp:
         self.edit_username_entry.insert(0, profile.username)
         
         self.edit_password_entry.delete(0, tk.END)
-        # Don't show actual password for security
         
         self.edit_default_var.set(profile.is_default)
     
@@ -750,7 +702,7 @@ class CredentialManagerApp:
         old_name = self.editing_profile.name
         new_name = self.edit_name_entry.get().strip()
         username = self.edit_username_entry.get().strip()
-        password = self.edit_password_entry.get()  # Optional for edit
+        password = self.edit_password_entry.get()  
         is_default = self.edit_default_var.get()
         
         if not new_name or not username:
@@ -759,7 +711,6 @@ class CredentialManagerApp:
         
         if self.credential_manager:
             try:
-                # Update profile
                 self.credential_manager.update_profile(
                     old_name, new_name, username, 
                     password if password else None,
@@ -770,7 +721,6 @@ class CredentialManagerApp:
             except Exception as e:
                 messagebox.showerror("Error", str(e))
         else:
-            # Demo mode - update in local list
             for i, p in enumerate(self.profiles):
                 if p.name == old_name:
                     self.profiles[i] = ProfileData(
@@ -786,7 +736,6 @@ class CredentialManagerApp:
     
     def _create_profile_form(self, parent, prefix: str):
         """Create profile form fields."""
-        # Profile name
         name_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY)
         name_frame.pack(fill=tk.X, pady=(0, 15))
         
@@ -796,7 +745,6 @@ class CredentialManagerApp:
         name_entry = self._create_entry(name_frame)
         setattr(self, f"{prefix}_name_entry", name_entry)
         
-        # Username
         user_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY)
         user_frame.pack(fill=tk.X, pady=(0, 15))
         
@@ -806,7 +754,6 @@ class CredentialManagerApp:
         user_entry = self._create_entry(user_frame)
         setattr(self, f"{prefix}_username_entry", user_entry)
         
-        # Password
         pw_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY)
         pw_frame.pack(fill=tk.X, pady=(0, 15))
         
@@ -817,7 +764,6 @@ class CredentialManagerApp:
         pw_entry = self._create_entry(pw_frame, show='•')
         setattr(self, f"{prefix}_password_entry", pw_entry)
         
-        # Default checkbox
         default_var = tk.BooleanVar(value=False)
         setattr(self, f"{prefix}_default_var", default_var)
         
@@ -845,7 +791,6 @@ class CredentialManagerApp:
         main_frame = tk.Frame(parent, bg=Theme.BG_PRIMARY, padx=40, pady=25)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header with back button
         header = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         header.pack(fill=tk.X)
         
@@ -858,7 +803,6 @@ class CredentialManagerApp:
         tk.Label(header, text="🔒 Security Information", font=('Segoe UI', 18, 'bold'),
                 fg=Theme.ACCENT_PRIMARY, bg=Theme.BG_PRIMARY).pack(side=tk.LEFT, padx=(15, 0))
         
-        # Security info cards
         info_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         info_frame.pack(fill=tk.BOTH, expand=True, pady=(20, 0))
         
@@ -879,7 +823,6 @@ class CredentialManagerApp:
             tk.Label(card, text=value, font=('Segoe UI', 10),
                     fg=Theme.TEXT_SECONDARY, bg=Theme.BG_SECONDARY).pack(anchor=tk.W)
         
-        # Storage location
         if self.credential_manager:
             try:
                 path = self.credential_manager.get_database_path()
@@ -894,7 +837,6 @@ class CredentialManagerApp:
             except:
                 pass
         
-        # Back button
         btn_frame = tk.Frame(main_frame, bg=Theme.BG_PRIMARY)
         btn_frame.pack(fill=tk.X, pady=(20, 0))
         
@@ -1014,10 +956,8 @@ def show_profile_selector(profiles: List[ProfileData]):
 # ============================================================================
 
 if __name__ == "__main__":
-    # Demo with sample data
     app = CredentialManagerApp()
     
-    # Add some demo profiles
     app.profiles = [
         ProfileData("Student", "12316501", is_default=True, last_used="2026-02-05 12:00"),
         ProfileData("Guest", "guest123", is_default=False, last_used="2026-02-04 18:30"),

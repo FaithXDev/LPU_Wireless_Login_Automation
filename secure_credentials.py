@@ -50,11 +50,9 @@ DB_FILENAME = "credentials.db"
 KEYRING_SERVICE = "LPU_Wireless_24Online"
 KEYRING_MASTER_KEY = "master_key_salt"
 
-# PBKDF2 parameters for key derivation
-PBKDF2_ITERATIONS = 480000  # OWASP recommended minimum for PBKDF2-HMAC-SHA256
+PBKDF2_ITERATIONS = 480000  
 SALT_LENGTH = 32
 
-# Default profile name
 DEFAULT_PROFILE = "Default"
 
 
@@ -183,8 +181,6 @@ def check_biometric_availability() -> Tuple[bool, str]:
         import ctypes
         from ctypes import wintypes
         
-        # Check for Windows Hello availability via WebAuthn API
-        # This is a simplified check - in production, use proper Windows Hello APIs
         credential_guard = ctypes.windll.advapi32.SystemFunction036
         return True, "Windows Hello may be available. Full integration requires additional setup."
     except Exception as e:
@@ -207,27 +203,15 @@ def request_biometric_authentication() -> bool:
         return False
     
     try:
-        # Attempt to use Windows Credential UI for biometric prompt
-        # This requires the windows-credentials library or similar
         print("🔐 Requesting biometric authentication...")
         
-        # For now, we'll use a fallback approach with the credential manager
-        # In a full implementation, you would use:
-        # - Windows.Security.Credentials.UI.UserConsentVerifier
-        # - Or the WebAuthn API for passwordless auth
-        
-        # Check if we can import windows-specific modules
         try:
             import ctypes
             from ctypes import wintypes
             
-            # Use CredUIPromptForWindowsCredentials for a native prompt
-            # This will use Windows Hello if available
             CREDUIWIN_GENERIC = 0x1
             CREDUIWIN_ENUMERATE_ADMINS = 0x100
             
-            # Simplified: Return True to indicate biometric check passed
-            # In production, implement proper Windows Hello verification
             return True
             
         except ImportError:
@@ -270,7 +254,6 @@ class SecureCredentialManager:
         self._biometric_enabled: bool = False
         self._initialized: bool = False
         
-        # Print storage location for transparency
         self._print_storage_info()
     
     def _print_storage_info(self):
@@ -292,7 +275,6 @@ class SecureCredentialManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             
-            # Create settings table for master password hash and salt
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS settings (
                     key TEXT PRIMARY KEY,
@@ -300,7 +282,6 @@ class SecureCredentialManager:
                 )
             ''')
             
-            # Create profiles table for credential storage
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS profiles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -314,7 +295,6 @@ class SecureCredentialManager:
                 )
             ''')
             
-            # Create biometric settings table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS biometric_settings (
                     id INTEGER PRIMARY KEY,
@@ -353,15 +333,12 @@ class SecureCredentialManager:
         
         self._init_database()
         
-        # Generate salt and derive encryption key
         self._salt = generate_salt()
         key = derive_key_from_password(master_password, self._salt)
         self._fernet = Fernet(key)
         
-        # Hash the master password for verification
         self._master_password_hash = hash_password(master_password, self._salt)
         
-        # Store settings in database
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -373,14 +350,12 @@ class SecureCredentialManager:
                 ('master_password_hash', self._master_password_hash)
             )
             
-            # Store biometric preference
             cursor.execute(
                 "INSERT OR REPLACE INTO biometric_settings (id, enabled) VALUES (1, ?)",
                 (1 if enable_biometric else 0,)
             )
             conn.commit()
         
-        # Optionally store salt in OS keyring for additional security
         try:
             keyring.set_password(KEYRING_SERVICE, KEYRING_MASTER_KEY, 
                                base64.b64encode(self._salt).decode('utf-8'))
@@ -412,7 +387,6 @@ class SecureCredentialManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             
-            # Retrieve salt
             cursor.execute("SELECT value FROM settings WHERE key = 'salt'")
             salt_result = cursor.fetchone()
             if not salt_result:
@@ -421,7 +395,6 @@ class SecureCredentialManager:
             
             self._salt = base64.b64decode(salt_result[0])
             
-            # Retrieve stored password hash
             cursor.execute("SELECT value FROM settings WHERE key = 'master_password_hash'")
             hash_result = cursor.fetchone()
             if not hash_result:
@@ -430,17 +403,14 @@ class SecureCredentialManager:
             
             stored_hash = hash_result[0]
             
-            # Verify password
             computed_hash = hash_password(master_password, self._salt)
             if computed_hash != stored_hash:
                 print("❌ Incorrect master password.")
                 return False
             
-            # Derive encryption key
             key = derive_key_from_password(master_password, self._salt)
             self._fernet = Fernet(key)
             
-            # Check biometric settings
             cursor.execute("SELECT enabled FROM biometric_settings WHERE id = 1")
             bio_result = cursor.fetchone()
             self._biometric_enabled = bio_result[0] == 1 if bio_result else False
@@ -464,11 +434,9 @@ class SecureCredentialManager:
             print("❌ New master password must be at least 8 characters long.")
             return False
         
-        # First unlock with old password
         if not self.unlock(old_password):
             return False
         
-        # Get all profiles and decrypt passwords
         profiles = self.list_profiles()
         decrypted_data = []
         
@@ -486,17 +454,14 @@ class SecureCredentialManager:
                 print(f"❌ Error decrypting profile '{profile.profile_name}': {e}")
                 return False
         
-        # Generate new salt and key
         new_salt = generate_salt()
         new_key = derive_key_from_password(new_password, new_salt)
         new_fernet = Fernet(new_key)
         new_hash = hash_password(new_password, new_salt)
         
-        # Re-encrypt all credentials
         with self._get_connection() as conn:
             cursor = conn.cursor()
             
-            # Update salt and hash
             cursor.execute(
                 "UPDATE settings SET value = ? WHERE key = 'salt'",
                 (base64.b64encode(new_salt).decode('utf-8'),)
@@ -506,7 +471,6 @@ class SecureCredentialManager:
                 (new_hash,)
             )
             
-            # Re-encrypt each profile's password
             for data in decrypted_data:
                 encrypted = new_fernet.encrypt(data['password'].encode('utf-8'))
                 cursor.execute(
@@ -516,12 +480,10 @@ class SecureCredentialManager:
             
             conn.commit()
         
-        # Update internal state
         self._salt = new_salt
         self._fernet = new_fernet
         self._master_password_hash = new_hash
         
-        # Update keyring
         try:
             keyring.set_password(KEYRING_SERVICE, KEYRING_MASTER_KEY,
                                base64.b64encode(new_salt).decode('utf-8'))
@@ -550,23 +512,19 @@ class SecureCredentialManager:
             print("❌ Credential manager not unlocked. Please unlock first.")
             return False
         
-        # Encrypt the password
         encrypted_password = self._fernet.encrypt(password.encode('utf-8'))
         
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
-                # If setting as default, unset other defaults
                 if is_default:
                     cursor.execute("UPDATE profiles SET is_default = 0")
                 
-                # Check if this is the first profile
                 cursor.execute("SELECT COUNT(*) FROM profiles")
                 if cursor.fetchone()[0] == 0:
                     is_default = True
                 
-                # Insert the profile
                 cursor.execute('''
                     INSERT INTO profiles 
                     (profile_name, username, encrypted_password, created_at, is_default, metadata)
@@ -666,7 +624,6 @@ class SecureCredentialManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             
-            # Check if profile exists
             cursor.execute("SELECT id FROM profiles WHERE profile_name = ?", (profile_name,))
             if not cursor.fetchone():
                 print(f"❌ Profile '{profile_name}' not found.")
@@ -775,13 +732,11 @@ class SecureCredentialManager:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             
-            # Check if profile exists
             cursor.execute("SELECT id FROM profiles WHERE profile_name = ?", (profile_name,))
             if not cursor.fetchone():
                 print(f"❌ Profile '{profile_name}' not found.")
                 return False
             
-            # Unset all defaults and set new default
             cursor.execute("UPDATE profiles SET is_default = 0")
             cursor.execute(
                 "UPDATE profiles SET is_default = 1 WHERE profile_name = ?",
@@ -928,17 +883,14 @@ class SecureCredentialManager:
             return False
         
         try:
-            # Delete database file
             if self.db_path.exists():
                 self.db_path.unlink()
             
-            # Remove from keyring
             try:
                 keyring.delete_password(KEYRING_SERVICE, KEYRING_MASTER_KEY)
             except Exception:
                 pass
             
-            # Reset internal state
             self._fernet = None
             self._salt = None
             self._master_password_hash = None
@@ -969,14 +921,12 @@ def migrate_from_keyring(manager: SecureCredentialManager,
         True if migration successful, False otherwise.
     """
     try:
-        # Try to get credentials from old keyring storage
         username = keyring.get_password(keyring_service, "username")
         
         if username:
             password = keyring.get_password(keyring_service, username)
             
             if password:
-                # Add to new secure storage
                 success = manager.add_profile(
                     profile_name=DEFAULT_PROFILE,
                     username=username,
@@ -988,7 +938,6 @@ def migrate_from_keyring(manager: SecureCredentialManager,
                 if success:
                     print(f"✅ Migrated credentials for user: {username}")
                     
-                    # Optionally clean up old keyring entries
                     try:
                         keyring.delete_password(keyring_service, username)
                         keyring.delete_password(keyring_service, "username")

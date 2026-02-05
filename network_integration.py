@@ -56,7 +56,6 @@ APP_NAME = "LPU Wireless Auto-Login"
 STARTUP_REGISTRY_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 STARTUP_ENTRY_NAME = "LPUWirelessAutoLogin"
 
-# LPU network identifiers (SSIDs to watch for)
 LPU_NETWORKS = [
     "LPU",
     "LPU-STUDENT",
@@ -101,7 +100,6 @@ def get_current_wifi_ssid() -> Optional[str]:
         SSID string if connected to WiFi, None otherwise.
     """
     try:
-        # Use netsh to get current WiFi info
         result = subprocess.run(
             ['netsh', 'wlan', 'show', 'interfaces'],
             capture_output=True,
@@ -153,7 +151,6 @@ def check_internet_connectivity() -> bool:
         True if internet is reachable, False otherwise.
     """
     try:
-        # Try to reach LPU login page
         result = subprocess.run(
             ['ping', '-n', '1', '-w', '2000', 'internet.lpu.in'],
             capture_output=True,
@@ -174,7 +171,6 @@ def check_captive_portal() -> bool:
     try:
         import urllib.request
         
-        # Try to access a known URL
         req = urllib.request.Request(
             'http://connectivitycheck.gstatic.com/generate_204',
             headers={'User-Agent': 'Mozilla/5.0'}
@@ -182,18 +178,15 @@ def check_captive_portal() -> bool:
         
         response = urllib.request.urlopen(req, timeout=5)
         
-        # If we get redirected or don't get 204, we're behind a portal
         if response.status != 204:
             return True
         
-        # Check if response URL changed (redirect)
         if response.url != 'http://connectivitycheck.gstatic.com/generate_204':
             return True
         
         return False
         
     except Exception:
-        # Error usually means we need to login
         return True
 
 
@@ -257,16 +250,12 @@ class NetworkMonitor:
                 is_connected = ssid is not None
                 is_lpu = is_lpu_network(ssid)
                 
-                # Detect connection change
                 if is_connected and not self._last_connected:
-                    # Just connected
                     print(f"📶 Connected to WiFi: {ssid}")
                     
                     if is_lpu and not self._login_attempted:
-                        # Wait a moment for network to stabilize
                         time.sleep(2)
                         
-                        # Check if captive portal login is needed
                         if check_captive_portal():
                             print("🔐 Captive portal detected - login required")
                             self._login_attempted = True
@@ -280,7 +269,6 @@ class NetworkMonitor:
                             print("✅ Already logged in or no captive portal")
                 
                 elif not is_connected and self._last_connected:
-                    # Just disconnected
                     print("📴 WiFi disconnected")
                     self._login_attempted = False
                     
@@ -290,7 +278,6 @@ class NetworkMonitor:
                         except Exception as e:
                             print(f"❌ Disconnect callback error: {e}")
                 
-                # Check if SSID changed (roaming)
                 if ssid != self._last_ssid and ssid is not None:
                     if self._last_ssid is not None:
                         print(f"📶 Network changed: {self._last_ssid} → {ssid}")
@@ -354,30 +341,25 @@ class SystemTrayApp:
         
         # Colors based on status
         colors = {
-            ConnectionStatus.DISCONNECTED: '#6c6c8a',  # Gray
-            ConnectionStatus.CONNECTING: '#ffc107',     # Yellow
-            ConnectionStatus.CONNECTED: '#00b4d8',      # Blue
-            ConnectionStatus.LOGGED_IN: '#00f5a0',      # Green
-            ConnectionStatus.ERROR: '#ff4757'           # Red
+            ConnectionStatus.DISCONNECTED: '#6c6c8a',  
+            ConnectionStatus.CONNECTING: '#ffc107',     
+            ConnectionStatus.CONNECTED: '#00b4d8',      
+            ConnectionStatus.LOGGED_IN: '#00f5a0',      
+            ConnectionStatus.ERROR: '#ff4757'           
         }
         
         color = colors.get(status, colors[ConnectionStatus.DISCONNECTED])
         
-        # Draw a WiFi-like icon
-        # Draw circles for signal strength
         center = size // 2
         
-        # Outer circle (background)
         draw.ellipse([4, 4, size-4, size-4], fill=color)
         
-        # Inner circle (cutout)
         inner_size = size // 3
         inner_offset = (size - inner_size) // 2
         draw.ellipse([inner_offset, inner_offset, 
                      inner_offset + inner_size, inner_offset + inner_size], 
                      fill='#1a1a2e')
         
-        # Status dot in center
         dot_size = size // 5
         dot_offset = (size - dot_size) // 2
         draw.ellipse([dot_offset, dot_offset, 
@@ -462,13 +444,11 @@ class SystemTrayApp:
         status = "enabled" if self.auto_login_enabled else "disabled"
         self.show_notification("Auto-Login", f"Auto-login {status}")
         
-        # Update menu
         if self.icon:
             self.icon.menu = self._create_menu()
     
     def _on_manage_profiles(self):
         """Open profile management."""
-        # Run the main script with --profiles flag
         script_path = Path(__file__).parent / "lpu_auto_login.py"
         subprocess.Popen(
             [sys.executable, str(script_path), '--profiles'],
@@ -492,7 +472,6 @@ class SystemTrayApp:
             enable_startup()
             self.show_notification("Startup Enabled", "LPU Auto-Login will start with Windows")
         
-        # Update menu
         if self.icon:
             self.icon.menu = self._create_menu()
     
@@ -522,7 +501,7 @@ class SystemTrayApp:
             try:
                 self.icon.notify(message, title)
             except Exception:
-                pass  # Notifications might not be supported
+                pass  
     
     def run(self, with_network_monitor: bool = True):
         """
@@ -533,7 +512,6 @@ class SystemTrayApp:
         """
         self._running = True
         
-        # Start network monitor if requested
         if with_network_monitor:
             def on_network_connect(ssid):
                 if self.auto_login_enabled:
@@ -554,7 +532,6 @@ class SystemTrayApp:
             )
             self.network_monitor.start()
         
-        # Check initial connection status
         ssid = get_current_wifi_ssid()
         if ssid:
             if check_captive_portal():
@@ -564,7 +541,6 @@ class SystemTrayApp:
         else:
             self.update_status(ConnectionStatus.DISCONNECTED)
         
-        # Create and run the tray icon
         self.icon = pystray.Icon(
             "lpu_wifi",
             self._create_icon_image(self.status),
@@ -641,7 +617,7 @@ def disable_startup() -> bool:
         try:
             winreg.DeleteValue(key, STARTUP_ENTRY_NAME)
         except WindowsError:
-            pass  # Value doesn't exist
+            pass  
         
         winreg.CloseKey(key)
         print("✅ Startup disabled")
@@ -661,7 +637,6 @@ def create_scheduled_task() -> bool:
     try:
         script_path = Path(__file__).parent / "lpu_auto_login.py"
         
-        # Create XML for the scheduled task
         task_xml = f'''<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
@@ -698,20 +673,17 @@ def create_scheduled_task() -> bool:
   </Actions>
 </Task>'''
         
-        # Save XML to temp file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False, encoding='utf-16') as f:
             f.write(task_xml)
             xml_path = f.name
         
-        # Import the task
         result = subprocess.run(
             ['schtasks', '/Create', '/TN', STARTUP_ENTRY_NAME, '/XML', xml_path, '/F'],
             capture_output=True,
             text=True
         )
         
-        # Clean up
         os.unlink(xml_path)
         
         if result.returncode == 0:
@@ -752,7 +724,7 @@ def hide_console_window():
             
             hwnd = kernel32.GetConsoleWindow()
             if hwnd:
-                user32.ShowWindow(hwnd, 0)  # SW_HIDE = 0
+                user32.ShowWindow(hwnd, 0)  
         except Exception:
             pass
 
@@ -766,7 +738,7 @@ def show_console_window():
             
             hwnd = kernel32.GetConsoleWindow()
             if hwnd:
-                user32.ShowWindow(hwnd, 5)  # SW_SHOW = 5
+                user32.ShowWindow(hwnd, 5)  
         except Exception:
             pass
 
@@ -779,7 +751,6 @@ if __name__ == "__main__":
     print("🔍 Network Monitor Test")
     print("=" * 40)
     
-    # Test WiFi detection
     ssid = get_current_wifi_ssid()
     print(f"Current SSID: {ssid or 'Not connected'}")
     print(f"Is LPU network: {is_lpu_network(ssid)}")
