@@ -958,11 +958,7 @@ def show_profile_selector(profiles: List[ProfileData]):
 if __name__ == "__main__":
     app = CredentialManagerApp()
     
-    app.profiles = [
-        ProfileData("Student", "12316501", is_default=True, last_used="2026-02-05 12:00"),
-        ProfileData("Guest", "guest123", is_default=False, last_used="2026-02-04 18:30"),
-        ProfileData("Staff", "staff456", is_default=False),
-    ]
+    app.profiles = []
     
     result = app.run("profiles")
     print(f"Result: {result}")
